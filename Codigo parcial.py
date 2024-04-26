@@ -1,6 +1,5 @@
 import sqlite3
 import matplotlib.pyplot as plt
-import os
 import tkinter as tk
 from tkinter import messagebox
 
@@ -70,7 +69,7 @@ def listar_productos():
         messagebox.showinfo("Productos", "No hay productos registrados.")
 
 def generar_reportes():
-    query_reporte = '''
+    query_reporte1 = '''
         SELECT 
             c.name_categoria, 
             SUM(p.cantidad) as total_productos
@@ -81,14 +80,14 @@ def generar_reportes():
         GROUP BY 
             c.name_categoria 
     '''
-    cursor.execute(query_reporte)
+    cursor.execute(query_reporte1)
     data = cursor.fetchall()
 
-    # Preparar los datos para la gráfica
+    # Preparar los datos para la primera gráfica
     categorias = [resultado[0] for resultado in data]
     total_productos = [resultado[1] for resultado in data]
 
-    # Crear y mostrar la gráfica
+    # Crear la primera gráfica
     plt.figure(figsize=(10, 6))
     plt.bar(categorias, total_productos, color='skyblue')
     plt.xlabel('Categorías')
@@ -96,6 +95,39 @@ def generar_reportes():
     plt.title('Total de productos por categoría')
     plt.xticks(rotation=45)
     plt.tight_layout()
+
+    # Segunda consulta para la segunda gráfica
+    query_reporte2 = '''
+        SELECT 
+            c.name_categoria, 
+            p.name_producto
+        FROM 
+            productos p INNER JOIN 
+                categorias c
+            ON p.id_categoria = c.id
+        ORDER BY 
+            c.name_categoria
+    '''
+    cursor.execute(query_reporte2)
+    data_products = cursor.fetchall()
+
+    # Preparar los datos para la segunda gráfica
+    categories_products = {}
+    for categoria, producto in data_products:
+        if categoria not in categories_products:
+            categories_products[categoria] = []
+        categories_products[categoria].append(producto)
+
+    # Crear la segunda gráfica
+    plt.figure(figsize=(10, 6))
+    for categoria, productos in categories_products.items():
+        plt.barh(productos, len(categoria), color='lightgreen')
+    plt.xlabel('Cantidad de Productos')
+    plt.ylabel('Categorías')
+    plt.title('Productos por categoría')
+    plt.tight_layout()
+
+    # Mostrar ambas gráficas
     plt.show()
 
 # Crear la ventana principal
